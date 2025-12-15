@@ -13,9 +13,9 @@ public class Login extends JFrame {
     private JPanel Panel_img;
     private JPanel Panel_Login;
 
-    private final String URL = "jdbc:mysql://localhost:3306/banco";
-    private final String USER = "root";
-    private final String PASSWORD = "root";
+    String URL = "jdbc:mysql://ukwsbe9qsn9b1cvo:gRuDpez80UqNtGXFFdZj@bjhreqgoaghtpvvmphmi-mysql.services.clever-cloud.com:3306/bjhreqgoaghtpvvmphmi";
+    String USER = "ukwsbe9qsn9b1cvo";
+    String PASSWORD = "gRuDpez80UqNtGXFFdZj";
 
     public Login() {
         setTitle("PANTALLA PRINCIPAL");

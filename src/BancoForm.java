@@ -28,9 +28,9 @@ public class BancoForm extends JFrame {
     private double saldoActual;
 
     // DATOS BD
-    private final String URL = "jdbc:mysql://localhost:3306/banco";
-    private final String DB_USER = "root";
-    private final String DB_PASS = "root";
+    private final String URL = "jdbc:mysql://ukwsbe9qsn9b1cvo:gRuDpez80UqNtGXFFdZj@bjhreqgoaghtpvvmphmi-mysql.services.clever-cloud.com:3306/bjhreqgoaghtpvvmphmi";
+    private final String DB_USER = "ukwsbe9qsn9b1cvo";
+    private final String DB_PASS = "gRuDpez80UqNtGXFFdZj";
 
     private StringBuilder historial = new StringBuilder();
 
@@ -122,6 +122,10 @@ public class BancoForm extends JFrame {
             if (monto <= 0) throw new Exception();
 
             double nuevoSaldo = saldoActual + monto;
+            saldoActual += monto;
+            actualizarSaldo();
+            actualizarSaldoBD(nuevoSaldo);
+
             actualizarSaldoBD(nuevoSaldo);
 
             agregarHistorial("Depósito: $" + monto);
@@ -139,6 +143,8 @@ public class BancoForm extends JFrame {
             if (monto <= 0 || monto > saldoActual) throw new Exception();
 
             double nuevoSaldo = saldoActual - monto;
+            saldoActual -= monto;
+            actualizarSaldo();
             actualizarSaldoBD(nuevoSaldo);
 
             agregarHistorial("Retiro: $" + monto);
@@ -159,6 +165,8 @@ public class BancoForm extends JFrame {
                 throw new Exception();
 
             double nuevoSaldo = saldoActual - monto;
+            saldoActual -= monto;
+            actualizarSaldo();
             actualizarSaldoBD(nuevoSaldo);
 
             agregarHistorial("Transferencia a " + destino + ": $" + monto);
@@ -171,4 +179,24 @@ public class BancoForm extends JFrame {
             JOptionPane.showMessageDialog(this, "Datos inválidos");
         }
     }
+    private void actualizarSaldo() {
+
+        String sql = "UPDATE usuario SET saldo = ? WHERE nombre = ?";
+
+        try (Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://ukwsbe9qsn9b1cvo:gRuDpez80UqNtGXFFdZj@bjhreqgoaghtpvvmphmi-mysql.services.clever-cloud.com:3306/bjhreqgoaghtpvvmphmi", "ukwsbe9qsn9b1cvo", "gRuDpez80UqNtGXFFdZj");
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDouble(1, saldoActual);
+            ps.setString(2, user);
+
+            int filas = ps.executeUpdate();
+            System.out.println("Filas actualizadas: " + filas);
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al actualizar saldo en BD");
+            e.printStackTrace();
+        }
+    }
+
 }

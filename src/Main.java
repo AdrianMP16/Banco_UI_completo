@@ -2,9 +2,9 @@ import java.sql.*;
 
 public class Main{
     public static void main(String[] args) {
-        String url = "jdbc:mysql://localhost:3306/banco";
-        String user = "root";
-        String password = "root";
+        String url = "jdbc:mysql://ukwsbe9qsn9b1cvo:gRuDpez80UqNtGXFFdZj@bjhreqgoaghtpvvmphmi-mysql.services.clever-cloud.com:3306/bjhreqgoaghtpvvmphmi";
+        String user = "ukwsbe9qsn9b1cvo";
+        String password = "gRuDpez80UqNtGXFFdZj";
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String sql="select * from usuario";
