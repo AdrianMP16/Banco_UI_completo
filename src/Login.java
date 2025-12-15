@@ -13,7 +13,6 @@ public class Login extends JFrame {
     private JPanel Panel_img;
     private JPanel Panel_Login;
 
-    // Datos de conexión
     private final String URL = "jdbc:mysql://localhost:3306/banco";
     private final String USER = "root";
     private final String PASSWORD = "root";
@@ -50,7 +49,6 @@ public class Login extends JFrame {
         });
     }
 
-    // MÉTODO PARA VALIDAR LOGIN
     private boolean validarLogin(String usuario, String contrasena) {
 
         String sql = "SELECT * FROM usuario WHERE nombre = ? AND contrasena = ?";
@@ -63,7 +61,7 @@ public class Login extends JFrame {
 
             ResultSet rs = ps.executeQuery();
 
-            return rs.next(); // si existe el usuario → true
+            return rs.next();
 
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error de conexión");

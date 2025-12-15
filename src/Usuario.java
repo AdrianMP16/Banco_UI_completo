@@ -2,9 +2,9 @@ public class Usuario {
     private String nombre;
     private double saldo;
 
-    public Usuario(String nombre) {
+    public Usuario(String nombre,double saldo) {
         this.nombre = nombre;
-        this.saldo = 1000.00;
+        this.saldo = saldo;
     }
 
     public String getNombre() {

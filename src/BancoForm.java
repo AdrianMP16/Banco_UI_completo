@@ -1,9 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.sql.*;
 
-public class BancoForm extends JFrame{
+public class BancoForm extends JFrame {
+
     private JButton salirButton;
     private JButton depositarButton1;
     private JButton retirarButton;
@@ -25,147 +25,150 @@ public class BancoForm extends JFrame{
     private JTextArea historialArea;
 
     private String user;
-    private double saldoActual=10000.00;
+    private double saldoActual;
+
+    // DATOS BD
+    private final String URL = "jdbc:mysql://localhost:3306/banco";
+    private final String DB_USER = "root";
+    private final String DB_PASS = "root";
+
     private StringBuilder historial = new StringBuilder();
+
+    public BancoForm(String user) {
+
+        this.user = user;
+
+        setTitle("Banco");
+        setSize(1000, 500);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setContentPane(Panel_Banco);
+
+        usuario.setText(user);
+
+        Inicial.setLayout(new CardLayout());
+        Inicial.add(Depositar, "depositar");
+        Inicial.add(Retirar, "retirar");
+        Inicial.add(Transferir, "transferir");
+
+        cargarSaldo();
+
+        depositarButton1.addActionListener(e -> mostrarPanel("depositar"));
+        retirarButton.addActionListener(e -> mostrarPanel("retirar"));
+        transferirButton.addActionListener(e -> mostrarPanel("transferir"));
+
+        depositarButton.addActionListener(e -> depositar());
+        retirarButton1.addActionListener(e -> retirar());
+        tranferirButton.addActionListener(e -> transferir());
+
+        salirButton.addActionListener(e -> {
+            dispose();
+            new Login().setVisible(true);
+        });
+
+        setVisible(true);
+    }
+
+    // ---------------- MÉTODOS ----------------
+
+    private void mostrarPanel(String nombre) {
+        CardLayout cl = (CardLayout) Inicial.getLayout();
+        cl.show(Inicial, nombre);
+    }
 
     private void agregarHistorial(String texto) {
         historial.append(texto).append("\n");
         historialArea.setText(historial.toString());
     }
 
-    private void mostrarPanel(String nombrePanel) {
-        CardLayout cl = (CardLayout) Inicial.getLayout();
-        cl.show(Inicial, nombrePanel);
+    private void cargarSaldo() {
+        String sql = "SELECT saldo FROM usuario WHERE nombre = ?";
+        try (Connection conn = DriverManager.getConnection(URL, DB_USER, DB_PASS);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, user);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                saldoActual = rs.getDouble("saldo");
+                saldo.setText("$ " + saldoActual);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar saldo");
+        }
     }
 
-    private void actualizarSaldo() {
-        saldo.setText("$ " + saldoActual);
+    private void actualizarSaldoBD(double nuevoSaldo) {
+        String sql = "UPDATE usuario SET saldo = ? WHERE nombre = ?";
+        try (Connection conn = DriverManager.getConnection(URL, DB_USER, DB_PASS);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDouble(1, nuevoSaldo);
+            ps.setString(2, user);
+            ps.executeUpdate();
+
+            saldoActual = nuevoSaldo;
+            saldo.setText("$ " + saldoActual);
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al actualizar saldo");
+        }
     }
 
+    private void depositar() {
+        try {
+            double monto = Double.parseDouble(cantidadDepositar.getText());
+            if (monto <= 0) throw new Exception();
 
-    public BancoForm(String user){
-        setTitle("Banco form");
-        setSize(1000,500);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
-        setVisible(true);
-        setContentPane(Panel_Banco);
+            double nuevoSaldo = saldoActual + monto;
+            actualizarSaldoBD(nuevoSaldo);
 
-        this.user=user;
+            agregarHistorial("Depósito: $" + monto);
+            cantidadDepositar.setText("");
+            JOptionPane.showMessageDialog(this, "Depósito exitoso");
 
-        usuario.setText(user);
-        saldo.setText("$ "+saldoActual);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Monto inválido");
+        }
+    }
 
-        Inicial.setLayout(new CardLayout());
-        Inicial.add(Depositar,"depositar");
-        Inicial.add(Retirar,"retirar");
-        Inicial.add(Transferir,"transferir");
+    private void retirar() {
+        try {
+            double monto = Double.parseDouble(cantidadRetirar.getText());
+            if (monto <= 0 || monto > saldoActual) throw new Exception();
 
+            double nuevoSaldo = saldoActual - monto;
+            actualizarSaldoBD(nuevoSaldo);
 
-        depositarButton1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mostrarPanel("depositar");
-            }
-        });
-        retirarButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mostrarPanel("retirar");
-            }
-        });
-        transferirButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mostrarPanel("transferir");
-            }
-        });
-        depositarButton.addActionListener(e -> {
-            try {
-                double monto = Double.parseDouble(cantidadDepositar.getText());
+            agregarHistorial("Retiro: $" + monto);
+            cantidadRetirar.setText("");
+            JOptionPane.showMessageDialog(this, "Retiro exitoso");
 
-                if (monto <= 0) {
-                    JOptionPane.showMessageDialog(this, "Ingrese un monto válido");
-                    return;
-                }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Monto inválido o saldo insuficiente");
+        }
+    }
 
-                saldoActual += monto;
-                agregarHistorial("Depósito de $" + monto);
-                actualizarSaldo();
-                cantidadDepositar.setText("");
-                JOptionPane.showMessageDialog(this, "Depósito exitoso");
+    private void transferir() {
+        try {
+            String destino = destinatario.getText().trim();
+            double monto = Double.parseDouble(cantidadTranferir.getText());
 
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Ingrese un número válido");
-            }
-        });
-        retirarButton1.addActionListener(e -> {
-            try {
-                double monto = Double.parseDouble(cantidadRetirar.getText());
+            if (destino.isEmpty() || monto <= 0 || monto > saldoActual)
+                throw new Exception();
 
-                if (monto <= 0) {
-                    JOptionPane.showMessageDialog(this, "Ingrese un monto válido");
-                    return;
-                }
+            double nuevoSaldo = saldoActual - monto;
+            actualizarSaldoBD(nuevoSaldo);
 
-                if (monto > saldoActual) {
-                    JOptionPane.showMessageDialog(this, "Saldo insuficiente");
-                    return;
-                }
+            agregarHistorial("Transferencia a " + destino + ": $" + monto);
 
-                saldoActual -= monto;
-                agregarHistorial("Retiro de $" + monto);
-                actualizarSaldo();
-                cantidadRetirar.setText("");
-                JOptionPane.showMessageDialog(this, "Retiro realizado");
+            destinatario.setText("");
+            cantidadTranferir.setText("");
+            JOptionPane.showMessageDialog(this, "Transferencia exitosa");
 
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Ingrese un número válido");
-            }
-        });
-        tranferirButton.addActionListener(e -> {
-            try {
-
-                String cuenta = destinatario.getText().trim();
-                double monto = Double.parseDouble(cantidadTranferir.getText());
-
-                if (cuenta.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Ingrese una cuenta destino");
-                    return;
-                }
-
-                if (monto <= 0) {
-                    JOptionPane.showMessageDialog(this, "Ingrese un monto válido");
-                    return;
-                }
-
-                if (monto > saldoActual) {
-                    JOptionPane.showMessageDialog(this, "Saldo insuficiente");
-                    return;
-                }
-
-                saldoActual -= monto;
-                agregarHistorial("Transferencia de $" + monto + " a " + cuenta);
-                actualizarSaldo();
-
-                destinatario.setText("");
-                cantidadTranferir.setText("");
-
-                JOptionPane.showMessageDialog(this,
-                        "Transferencia realizada a " + cuenta + " por $ "+monto);
-
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Ingrese un número válido");
-            }
-        });
-        salirButton.addActionListener(e -> {
-            JFrame ventanaActual = (JFrame) SwingUtilities.getWindowAncestor(salirButton);
-            ventanaActual.dispose();
-
-            Login login = new Login();
-            login.setVisible(true);
-        });
-
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Datos inválidos");
+        }
     }
 }
