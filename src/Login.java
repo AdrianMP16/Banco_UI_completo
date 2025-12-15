@@ -3,43 +3,75 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.*;
 
+public class Login extends JFrame {
 
-public class Login extends JFrame{
     private JButton ingresarButton;
     private JTextField InContraseña;
     private JTextField InUsuario;
     private JPanel Panel_img;
     private JPanel Panel_Login;
 
-    public Login(){
+    // Datos de conexión
+    private final String URL = "jdbc:mysql://localhost:3306/banco";
+    private final String USER = "root";
+    private final String PASSWORD = "root";
+
+    public Login() {
         setTitle("PANTALLA PRINCIPAL");
-        setSize(550,300);
+        setSize(550, 300);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setVisible(true);
         setContentPane(Panel_Login);
+        setLocationRelativeTo(null);
 
         ingresarButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String user="cliente123";
-                String key="clave456";
-                String client=InUsuario.getText();
-                String contra=InContraseña.getText();
-                if (user.equals(client) && key.equals(contra)){
-                    JOptionPane.showMessageDialog(null,"Credenciales correctas");
+
+                String usuario = InUsuario.getText().trim();
+                String contrasena = InContraseña.getText().trim();
+
+                if (usuario.isEmpty() || contrasena.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Campos vacíos");
+                    return;
+                }
+
+                if (validarLogin(usuario, contrasena)) {
+                    JOptionPane.showMessageDialog(null, "Credenciales correctas");
                     dispose();
-                    new BancoForm(user).setVisible(true);
-                } else if (client.trim().isEmpty() || contra.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(null,"Credenciales vacias");
-                }else {
-                    JOptionPane.showMessageDialog(null,"Usuario o contraseña incorrectos");
-                    InContraseña.setText("");
+                    new BancoForm(usuario).setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Usuario o contraseña incorrectos");
                     InUsuario.setText("");
+                    InContraseña.setText("");
                 }
             }
         });
     }
+
+    // MÉTODO PARA VALIDAR LOGIN
+    private boolean validarLogin(String usuario, String contrasena) {
+
+        String sql = "SELECT * FROM usuario WHERE nombre = ? AND contrasena = ?";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, usuario);
+            ps.setString(2, contrasena);
+
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next(); // si existe el usuario → true
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error de conexión");
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
     private void createUIComponents() {
         Panel_img = new JPanel() {
             @Override
@@ -50,5 +82,5 @@ public class Login extends JFrame{
             }
         };
     }
-
 }
+
