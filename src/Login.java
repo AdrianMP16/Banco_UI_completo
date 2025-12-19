@@ -13,10 +13,6 @@ public class Login extends JFrame {
     private JPanel Panel_img;
     private JPanel Panel_Login;
 
-    String URL = "jdbc:mysql://ukwsbe9qsn9b1cvo:gRuDpez80UqNtGXFFdZj@bjhreqgoaghtpvvmphmi-mysql.services.clever-cloud.com:3306/bjhreqgoaghtpvvmphmi";
-    String USER = "ukwsbe9qsn9b1cvo";
-    String PASSWORD = "gRuDpez80UqNtGXFFdZj";
-
     public Login() {
         setTitle("PANTALLA PRINCIPAL");
         setSize(550, 300);
@@ -53,7 +49,7 @@ public class Login extends JFrame {
 
         String sql = "SELECT * FROM usuario WHERE nombre = ? AND contrasena = ?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = ConexionBD.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, usuario);

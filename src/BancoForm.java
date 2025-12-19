@@ -27,11 +27,6 @@ public class BancoForm extends JFrame {
     private String user;
     private double saldoActual;
 
-    // DATOS BD
-    private final String URL = "jdbc:mysql://ukwsbe9qsn9b1cvo:gRuDpez80UqNtGXFFdZj@bjhreqgoaghtpvvmphmi-mysql.services.clever-cloud.com:3306/bjhreqgoaghtpvvmphmi";
-    private final String DB_USER = "ukwsbe9qsn9b1cvo";
-    private final String DB_PASS = "gRuDpez80UqNtGXFFdZj";
-
     private StringBuilder historial = new StringBuilder();
 
     public BancoForm(String user) {
@@ -83,7 +78,7 @@ public class BancoForm extends JFrame {
 
     private void cargarSaldo() {
         String sql = "SELECT saldo FROM usuario WHERE nombre = ?";
-        try (Connection conn = DriverManager.getConnection(URL, DB_USER, DB_PASS);
+        try (Connection conn = ConexionBD.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, user);
@@ -96,23 +91,7 @@ public class BancoForm extends JFrame {
 
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error al cargar saldo");
-        }
-    }
-
-    private void actualizarSaldoBD(double nuevoSaldo) {
-        String sql = "UPDATE usuario SET saldo = ? WHERE nombre = ?";
-        try (Connection conn = DriverManager.getConnection(URL, DB_USER, DB_PASS);
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setDouble(1, nuevoSaldo);
-            ps.setString(2, user);
-            ps.executeUpdate();
-
-            saldoActual = nuevoSaldo;
-            saldo.setText("$ " + saldoActual);
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error al actualizar saldo");
+            e.printStackTrace();
         }
     }
 
@@ -123,10 +102,8 @@ public class BancoForm extends JFrame {
 
             double nuevoSaldo = saldoActual + monto;
             saldoActual += monto;
+            saldo.setText("$ "+saldoActual);
             actualizarSaldo();
-            actualizarSaldoBD(nuevoSaldo);
-
-            actualizarSaldoBD(nuevoSaldo);
 
             agregarHistorial("Depósito: $" + monto);
             cantidadDepositar.setText("");
@@ -144,8 +121,8 @@ public class BancoForm extends JFrame {
 
             double nuevoSaldo = saldoActual - monto;
             saldoActual -= monto;
+            saldo.setText("$ "+saldoActual);
             actualizarSaldo();
-            actualizarSaldoBD(nuevoSaldo);
 
             agregarHistorial("Retiro: $" + monto);
             cantidadRetirar.setText("");
@@ -166,8 +143,8 @@ public class BancoForm extends JFrame {
 
             double nuevoSaldo = saldoActual - monto;
             saldoActual -= monto;
+            saldo.setText("$ "+saldoActual);
             actualizarSaldo();
-            actualizarSaldoBD(nuevoSaldo);
 
             agregarHistorial("Transferencia a " + destino + ": $" + monto);
 
@@ -183,8 +160,7 @@ public class BancoForm extends JFrame {
 
         String sql = "UPDATE usuario SET saldo = ? WHERE nombre = ?";
 
-        try (Connection conn = DriverManager.getConnection(
-                "jdbc:mysql://ukwsbe9qsn9b1cvo:gRuDpez80UqNtGXFFdZj@bjhreqgoaghtpvvmphmi-mysql.services.clever-cloud.com:3306/bjhreqgoaghtpvvmphmi", "ukwsbe9qsn9b1cvo", "gRuDpez80UqNtGXFFdZj");
+        try (Connection conn = ConexionBD.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setDouble(1, saldoActual);
